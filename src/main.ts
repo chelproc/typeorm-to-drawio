@@ -38,7 +38,7 @@ const { values, positionals } = parseArgs({
 if (values.help || positionals.length === 0) {
   console.log(styleText("cyan", "TypeORM to Draw.io ER Diagram Generator"));
   console.log();
-  console.log("Usage: npx tsx src/main.ts [options] <files...>");
+  console.log("Usage: typeorm-to-drawio [options] <files...>");
   console.log();
   console.log("Options:");
   console.log(
@@ -48,10 +48,11 @@ if (values.help || positionals.length === 0) {
   console.log("  -h, --help           Show help message");
   console.log();
   console.log("Examples:");
-  console.log("  npx tsx src/main.ts models/*.ts");
+  console.log("  typeorm-to-drawio models/*.ts");
   console.log(
-    "  npx tsx src/main.ts models/User.ts models/Post.ts -o diagram.drawio",
+    "  typeorm-to-drawio models/User.ts models/Post.ts -o diagram.drawio",
   );
+  console.log("  typeorm-to-drawio src/entities/**/*.entity.ts -v");
   process.exit(0);
 }
 
@@ -128,7 +129,7 @@ async function main() {
     const relationships = analyzeRelationships(merged);
 
     // Generate Draw.io XML
-    const xml = generateDrawioXML(merged, relationships);
+    const xml = await generateDrawioXML(merged, relationships);
 
     // Write output file
     const outputPath = values.output || "entities.drawio";

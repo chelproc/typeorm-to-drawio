@@ -1,38 +1,81 @@
 import { create } from "xmlbuilder2";
+import elkjs from "elkjs";
+import type { ElkNode, ElkExtendedEdge } from "elkjs";
 import type { ParsedEntities, Relationship, EntityField } from "./types.ts";
 import { getArrowStyle } from "./relationship-analyzer.ts";
 
-const ENTITY_WIDTH = 140;
-const FIELD_HEIGHT = 30;
+const ENTITY_WIDTH = 180;
+const FIELD_HEIGHT = 26;
 const HEADER_HEIGHT = 30;
-const GRID_SPACING_X = 200;
-const GRID_SPACING_Y = 250;
-const COLUMNS_PER_ROW = 3;
+const NODE_SPACING = 50;
+const LAYER_SPACING = 120;
+const EDGE_SPACING = 30;
 
 /**
  * Generate Draw.io XML from parsed entities
  */
-export function generateDrawioXML(
+export async function generateDrawioXML(
   parsedEntities: ParsedEntities,
   relationships: Relationship[],
-): string {
+): Promise<string> {
   const { entities } = parsedEntities;
+
+  const ELK = elkjs.default;
+  const elk = new ELK();
+
+  // Build ELK graph
+  const elkGraph: ElkNode = {
+    id: "root",
+    layoutOptions: {
+      "elk.algorithm": "layered",
+      "elk.direction": "RIGHT",
+      "elk.spacing.nodeNode": NODE_SPACING.toString(),
+      "elk.layered.spacing.nodeNodeBetweenLayers": LAYER_SPACING.toString(),
+      "elk.layered.spacing.edgeNodeBetweenLayers": "75",
+      "elk.layered.spacing.edgeEdgeBetweenLayers": EDGE_SPACING.toString(),
+      "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
+      "elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
+    },
+    children: [],
+    edges: [],
+  };
+
+  // Add entities as nodes
+  entities.forEach((entity, name) => {
+    const height = HEADER_HEIGHT + entity.fields.length * FIELD_HEIGHT;
+    elkGraph.children!.push({
+      id: name,
+      width: ENTITY_WIDTH,
+      height: height,
+    });
+  });
+
+  // Add relationships as edges
+  relationships.forEach((rel, index) => {
+    if (entities.has(rel.from) && entities.has(rel.to)) {
+      elkGraph.edges!.push({
+        id: `edge-${index}`,
+        sources: [rel.from],
+        targets: [rel.to],
+      } as ElkExtendedEdge);
+    }
+  });
+
+  // Compute layout
+  const layoutResult = await elk.layout(elkGraph);
+
+  // Extract entity positions from layout result
   const entityPositions = new Map<
     string,
     { x: number; y: number; height: number }
   >();
 
-  // Calculate positions for entities in a grid layout
-  let index = 0;
-  entities.forEach((entity, name) => {
-    const col = index % COLUMNS_PER_ROW;
-    const row = Math.floor(index / COLUMNS_PER_ROW);
-    const x = 120 + col * (ENTITY_WIDTH + GRID_SPACING_X);
-    const y = 80 + row * GRID_SPACING_Y;
-    const height = HEADER_HEIGHT + entity.fields.length * FIELD_HEIGHT;
-
-    entityPositions.set(name, { x, y, height });
-    index++;
+  layoutResult.children?.forEach((node: ElkNode) => {
+    entityPositions.set(node.id, {
+      x: node.x || 0,
+      y: node.y || 0,
+      height: node.height || 0,
+    });
   });
 
   // Create XML document

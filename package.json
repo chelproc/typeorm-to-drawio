@@ -2,7 +2,7 @@
   "name": "@chelproc/typeorm-to-drawio",
   "author": "chelproc",
   "description": "A CLI tool to generate Draw.io ER diagrams from TypeORM entities",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "type": "module",
   "main": "./dist/main.js",
@@ -31,6 +31,7 @@
     "@babel/parser": "^7.28.4",
     "@babel/traverse": "^7.28.4",
     "@babel/types": "^7.28.4",
+    "elkjs": "^0.11.0",
     "xmlbuilder2": "^3.1.1"
   },
   "devDependencies": {
