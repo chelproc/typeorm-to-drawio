@@ -2,7 +2,7 @@
   "name": "@chelproc/typeorm-to-drawio",
   "author": "chelproc",
   "description": "A CLI tool to generate Draw.io ER diagrams from TypeORM entities",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "MIT",
   "type": "module",
   "main": "./dist/main.js",
